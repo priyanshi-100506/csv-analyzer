@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CSV Analyzer</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/papaparse@latest/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<style>
+:root{--bg:#070707;--panel:#0f0f14;--lav:#b084f7;--lav-2:#8b5cf6;--muted:#9ca3af;--white:#ffffff}
+*{box-sizing:border-box}
+body{background:linear-gradient(180deg,var(--bg), #0b0210);color:var(--white);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;padding:32px}
+.container{max-width:1100px;margin:0 auto}
+.header{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.logo{background:linear-gradient(90deg,var(--lav),var(--lav-2));padding:10px;border-radius:8px;font-weight:800;color:#080808}
+.title{font-size:28px;font-weight:800}
+.row{display:flex;gap:20px}
+.panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:18px;border-radius:12px;border:1px solid rgba(139,92,246,0.08)}
+.left{flex:1;min-width:320px}
+.right{width:420px}
+.upload-area{border:2px dashed rgba(139,92,246,0.18);padding:30px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;text-align:center;min-height:180px}
+.upload-area.drag{background:rgba(139,92,246,0.04);transform:scale(1.01)}
+.btn{background:var(--lav);color:#080808;padding:10px 14px;border-radius:8px;border:none;font-weight:700;cursor:pointer}
+.small{font-size:13px;color:var(--muted)}
+.section{margin-top:16px}
+.kv{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,0.02);font-size:14px}
+.code{background:#050506;padding:12px;border-radius:8px;overflow:auto}
+.controls{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.select{background:#0b0b0f;color:var(--white);padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03)}
+.footer{margin-top:18px;color:var(--muted);font-size:13px}
+.result-pre{background:#07070a;padding:12px;border-radius:8px;max-height:300px;overflow:auto;font-size:13px}
+.actions{display:flex;gap:10px;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo">PD</div>
+    <div>
+      <div class="title">CSV Analyzer</div>
+      <div class="small">Quick local data analysis • histograms • outliers • export</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="left panel">
+      <div id="uploadArea" class="upload-area">
+        <i class="fas fa-cloud-upload-alt" style="font-size:26px;color:var(--lav)"></i>
+        <div style="margin-top:10px;font-weight:700">Drag & drop CSV or click to browse</div>
+        <div class="small" style="margin-top:6px">Supports header row; numeric detection & charts included</div>
+        <input id="csvFile" type="file" accept=".csv" style="display:none"/>
+        <div class="controls">
+          <button id="analyzeBtn" class="btn" disabled>Analyze</button>
+          <button id="downloadJson" class="btn" style="background:#222;color:var(--lav)">Save JSON</button>
+          <button id="downloadPdf" class="btn" style="background:#222;color:var(--lav)">Save PDF</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="kv"><div>Summary</div><div id="summary"></div></div>
+        <div class="kv"><div>Detected Types</div><div id="types"></div></div>
+      </div>
+
+      <div class="section">
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="font-weight:700">Choose column for histogram</div>
+          <select id="columnSelect" class="select"></select>
+          <button id="showHist" class="btn" style="background:#222;color:var(--lav)">Show Histogram</button>
+        </div>
+        <div style="margin-top:12px" class="code">
+          <canvas id="histChart"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="right panel">
+      <div style="font-weight:700;margin-bottom:8px">Insights</div>
+      <div id="insights" class="result-pre">No analysis yet</div>
+
+      <div style="font-weight:700;margin-top:12px;margin-bottom:8px">Statistics</div>
+      <div id="stats" class="result-pre">No analysis yet</div>
+
+      <div style="font-weight:700;margin-top:12px;margin-bottom:8px">Outliers</div>
+      <div id="outliers" class="result-pre">No analysis yet</div>
+    </div>
+  </div>
+
+  <div class="footer">Local mode: runs on your machine. For server mode start the backend and the UI will call <code>http://localhost:3000/analyze</code></div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
